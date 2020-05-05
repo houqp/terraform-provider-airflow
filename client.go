@@ -11,10 +11,14 @@ import (
 type Variables map[string]string
 
 type AirflowClient struct {
-	lock sync.Mutex
+	VariablesOutputPath string
+	lock                sync.Mutex
 }
 
-func getOutputFilePath() string {
+func (self *AirflowClient) getOutputFilePath() string {
+	if self.VariablesOutputPath != "" {
+		return self.VariablesOutputPath
+	}
 	path, err := os.Getwd()
 	if err != nil {
 		panic("Failed to get current working directory")
@@ -22,8 +26,8 @@ func getOutputFilePath() string {
 	return filepath.Join(path, "airflow_variables.json")
 }
 
-func loadVariables(vars *Variables) {
-	output_path := getOutputFilePath()
+func (self *AirflowClient) loadVariables(vars *Variables) {
+	output_path := self.getOutputFilePath()
 	_, err := os.Stat(output_path)
 	if os.IsNotExist(err) {
 		return
@@ -44,7 +48,7 @@ func (self *AirflowClient) ReadVariable(key string) string {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	loadVariables(&vars)
+	self.loadVariables(&vars)
 	return vars[key]
 }
 
@@ -53,7 +57,7 @@ func (self *AirflowClient) DeleteVariable(key string) error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	loadVariables(&vars)
+	self.loadVariables(&vars)
 	delete(vars, key)
 
 	b, err := json.Marshal(vars)
@@ -61,7 +65,7 @@ func (self *AirflowClient) DeleteVariable(key string) error {
 		return err
 	}
 
-	output_path := getOutputFilePath()
+	output_path := self.getOutputFilePath()
 	err = ioutil.WriteFile(output_path, b, 0644)
 	if err != nil {
 		return err
@@ -75,7 +79,7 @@ func (self *AirflowClient) SetVariable(key string, value string) error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	loadVariables(&vars)
+	self.loadVariables(&vars)
 	vars[key] = value
 
 	b, err := json.Marshal(vars)
@@ -83,7 +87,7 @@ func (self *AirflowClient) SetVariable(key string, value string) error {
 		return err
 	}
 
-	output_path := getOutputFilePath()
+	output_path := self.getOutputFilePath()
 	err = ioutil.WriteFile(output_path, b, 0644)
 	if err != nil {
 		return err
