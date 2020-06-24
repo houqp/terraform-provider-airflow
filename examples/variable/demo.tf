@@ -1,8 +1,13 @@
 provider "airflow" {
-  variables_output_path = "./variables.json"
+  base_endpoint = "http://localhost:28080/"
 }
 
 resource "airflow_variable" "foo" {
   key   = "foo"
   value = "bar"
+}
+
+resource "airflow_variable" "hello" {
+  key   = "hello"
+  value = "world"
 }

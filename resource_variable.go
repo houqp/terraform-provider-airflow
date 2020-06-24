@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/apache/airflow-client-go/airflow"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*AirflowClient)
+	client := m.(*airflow.APIClient)
 	key := d.Get("key").(string)
-	err := client.SetVariable(key, d.Get("value").(string))
+	_, _, err := client.VariableApi.PostVariables(context.TODO(), airflow.Variable{
+		Key:   key,
+		Value: d.Get("value").(string),
+	})
 	if err != nil {
 		return err
 	}
@@ -16,27 +23,41 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*AirflowClient)
+	client := m.(*airflow.APIClient)
 	key := d.Get("key").(string)
-	value := client.ReadVariable(key)
-	if value == "" {
+	variable, resp, err := client.VariableApi.GetVariable(context.TODO(), key)
+	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("failed to get variable `%s` from Airflow: %w", key, err)
+	}
 
-	d.Set("key", key)
-	d.Set("value", value)
+	d.Set("key", variable.Key)
+	d.Set("value", variable.Value)
 	return nil
 }
 
 func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
-	return resourceVariableCreate(d, m)
+	client := m.(*airflow.APIClient)
+	key := d.Get("key").(string)
+	_, _, err := client.VariableApi.PatchVariable(context.TODO(), key, airflow.Variable{
+		Key:   key,
+		Value: d.Get("value").(string),
+	}, nil)
+	if err != nil {
+		return err
+	}
+	d.SetId(key)
+	return resourceVariableRead(d, m)
 }
 
 func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*AirflowClient)
+	client := m.(*airflow.APIClient)
 	key := d.Get("key").(string)
-	return client.DeleteVariable(key)
+	_, err := client.VariableApi.DeleteVariable(context.TODO(), key)
+	return err
 }
 
 func resourceVariable() *schema.Resource {
