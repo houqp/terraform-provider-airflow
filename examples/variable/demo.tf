@@ -1,5 +1,7 @@
 provider "airflow" {
   base_endpoint = "http://localhost:28080/"
+  username      = "test"
+  password      = "test"
 }
 
 resource "airflow_variable" "foo" {
