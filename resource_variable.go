@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/apache/airflow-client-go/airflow"
@@ -9,9 +8,10 @@ import (
 )
 
 func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*airflow.APIClient)
+	pcfg := m.(ProviderConfig)
+	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, _, err := client.VariableApi.PostVariables(context.TODO(), airflow.Variable{
+	_, _, err := client.VariableApi.PostVariables(pcfg.AuthContext, airflow.Variable{
 		Key:   key,
 		Value: d.Get("value").(string),
 	})
@@ -23,9 +23,10 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(*airflow.APIClient)
+	pcfg := m.(ProviderConfig)
+	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	variable, resp, err := client.VariableApi.GetVariable(context.TODO(), key)
+	variable, resp, err := client.VariableApi.GetVariable(pcfg.AuthContext, key)
 	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
 		return nil
@@ -40,9 +41,10 @@ func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*airflow.APIClient)
+	pcfg := m.(ProviderConfig)
+	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, _, err := client.VariableApi.PatchVariable(context.TODO(), key, airflow.Variable{
+	_, _, err := client.VariableApi.PatchVariable(pcfg.AuthContext, key, airflow.Variable{
 		Key:   key,
 		Value: d.Get("value").(string),
 	}, nil)
@@ -54,9 +56,10 @@ func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(*airflow.APIClient)
+	pcfg := m.(ProviderConfig)
+	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, err := client.VariableApi.DeleteVariable(context.TODO(), key)
+	_, err := client.VariableApi.DeleteVariable(pcfg.AuthContext, key)
 	return err
 }
 
