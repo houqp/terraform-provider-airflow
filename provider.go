@@ -45,7 +45,7 @@ func Provider() *schema.Provider {
 				return nil, fmt.Errorf("invalid base_endpoint: %w", err)
 			}
 
-			basePath := path.Join(u.Path + "/api/v1")
+			basePath := path.Join(u.Path + "/api/experimental")
 			log.Printf("[DEBUG] Using API prefix: %s", basePath)
 
 			authCtx := context.Background()
