@@ -11,10 +11,13 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, _, err := client.VariableApi.PostVariables(pcfg.AuthContext, airflow.Variable{
-		Key:   key,
-		Value: d.Get("value").(string),
-	})
+	val := d.Get("value").(string)
+	varApi := client.VariableApi
+
+	_, _, err := varApi.PostVariables(pcfg.AuthContext).Variable(airflow.Variable{
+		Key:   &key,
+		Value: &val,
+	}).Execute()
 	if err != nil {
 		return err
 	}
@@ -26,7 +29,7 @@ func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	variable, resp, err := client.VariableApi.GetVariable(pcfg.AuthContext, key)
+	variable, resp, err := client.VariableApi.GetVariable(pcfg.AuthContext, key).Execute()
 	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
 		return nil
@@ -43,11 +46,12 @@ func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
+	val := d.Get("value").(string)
 	key := d.Get("key").(string)
-	_, _, err := client.VariableApi.PatchVariable(pcfg.AuthContext, key, airflow.Variable{
-		Key:   key,
-		Value: d.Get("value").(string),
-	}, nil)
+	_, _, err := client.VariableApi.PatchVariable(pcfg.AuthContext, key).Variable(airflow.Variable{
+		Key:   &key,
+		Value: &val,
+	}).Execute()
 	if err != nil {
 		return err
 	}
@@ -59,7 +63,7 @@ func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, err := client.VariableApi.DeleteVariable(pcfg.AuthContext, key)
+	_, err := client.VariableApi.DeleteVariable(pcfg.AuthContext, key).Execute()
 	return err
 }
 
