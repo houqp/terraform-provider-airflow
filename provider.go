@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/apache/airflow-client-go/airflow"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ProviderConfig struct {
@@ -14,7 +14,7 @@ type ProviderConfig struct {
 	AuthContext context.Context
 }
 
-func Provider() *schema.Provider {
+func AirflowProvider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"base_endpoint": {

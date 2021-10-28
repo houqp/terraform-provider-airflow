@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/airflow-client-go/airflow"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
