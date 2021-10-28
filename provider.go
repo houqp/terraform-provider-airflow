@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
-	"path"
 
 	"github.com/apache/airflow-client-go/airflow"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -34,6 +32,11 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Description: "The password to use for API basic authentication",
 			},
+			"oauth2_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The username to use for API basic authentication",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"airflow_variable": resourceVariable(),
@@ -45,30 +48,29 @@ func Provider() *schema.Provider {
 				return nil, fmt.Errorf("invalid base_endpoint: %w", err)
 			}
 
-			basePath := path.Join(u.Path + "/api/experimental")
-			log.Printf("[DEBUG] Using API prefix: %s", basePath)
+			// basePath := path.Join(u.Path + "/api/experimental")
+			// log.Printf("[DEBUG] Using API prefix: %s", basePath)
 
 			authCtx := context.Background()
 
-			if username, ok := p.GetOk("username"); ok {
-				var password interface{}
-				if password, ok = p.GetOk("password"); !ok {
-					return nil, fmt.Errorf("Found username for basic auth, but password not specified.")
-				}
-				log.Printf("[DEBUG] Using API Basic Auth")
+			// if username, ok := p.GetOk("username"); ok {
+			// 	var password interface{}
+			// 	if password, ok = p.GetOk("password"); !ok {
+			// 		return nil, fmt.Errorf("Found username for basic auth, but password not specified.")
+			// 	}
+			// 	log.Printf("[DEBUG] Using API Basic Auth")
 
-				cred := airflow.BasicAuth{
-					UserName: username.(string),
-					Password: password.(string),
-				}
-				authCtx = context.WithValue(authCtx, airflow.ContextBasicAuth, cred)
-			}
+			// cred := airflow.ContextOAuth2.BasicAuth{
+			// 	UserName: username.(string),
+			// 	Password: password.(string),
+			// }
+			authCtx = context.WithValue(authCtx, airflow.ContextOAuth2, p.Get("oauth2_token").(string))
+			// }
 
 			return ProviderConfig{
 				ApiClient: airflow.NewAPIClient(&airflow.Configuration{
-					Scheme:   u.Scheme,
-					Host:     u.Host,
-					BasePath: basePath,
+					Scheme: u.Scheme,
+					Host:   u.Host,
 				}),
 				AuthContext: authCtx,
 			}, nil
