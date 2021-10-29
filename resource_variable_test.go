@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAirflowVariable_basic(t *testing.T) {
@@ -16,7 +17,7 @@ func TestAccAirflowVariable_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		CheckDestroy: testAccCheckAirflowVariableCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAirflowVariableConfigBasic(rName, rName),
@@ -24,6 +25,11 @@ func TestAccAirflowVariable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", rName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAirflowVariableConfigBasic(rName, rNameUpdated),
@@ -34,6 +40,29 @@ func TestAccAirflowVariable_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAirflowVariableCheckDestroy(s *terraform.State) error {
+	client := testAccProvider.Meta().(ProviderConfig)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "airflow_variable" {
+			continue
+		}
+
+		variable, res, err := client.ApiClient.VariableApi.GetVariable(client.AuthContext, rs.Primary.ID).Execute()
+		if err == nil {
+			if *variable.Key == rs.Primary.ID {
+				return fmt.Errorf("Airflow Variable (%s) still exists.", rs.Primary.ID)
+			}
+		}
+
+		if res != nil && res.StatusCode == 404 {
+			continue
+		}
+	}
+
+	return nil
 }
 
 func testAccAirflowVariableConfigBasic(rName, value string) string {
