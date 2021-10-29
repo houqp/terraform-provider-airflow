@@ -108,6 +108,7 @@ func resourceConnectionCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to create connection `%s` from Airflow: %w", connId, err)
 	}
 	d.SetId(connId)
+
 	return resourceConnectionRead(d, m)
 }
 
@@ -138,7 +139,7 @@ func resourceConnectionRead(d *schema.ResourceData, m interface{}) error {
 func resourceConnectionUpdate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	connId := d.Get("connection_id").(string)
+	connId := d.Id()
 	connType := d.Get("conn_type").(string)
 
 	conn := airflow.Connection{
@@ -180,7 +181,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to update connection `%s` from Airflow: %w", connId, err)
 	}
-	d.SetId(connId)
+
 	return resourceConnectionRead(d, m)
 }
 

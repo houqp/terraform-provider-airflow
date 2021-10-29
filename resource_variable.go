@@ -45,12 +45,14 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to create variable `%s` from Airflow: %w", key, err)
 	}
 	d.SetId(key)
+
 	return resourceVariableRead(d, m)
 }
 
 func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
+
 	variable, resp, err := client.VariableApi.GetVariable(pcfg.AuthContext, d.Id()).Execute()
 	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
@@ -62,14 +64,16 @@ func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 
 	d.Set("key", variable.Key)
 	d.Set("value", variable.Value)
+
 	return nil
 }
 
 func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
+
 	val := d.Get("value").(string)
-	key := d.Get("key").(string)
+	key := d.Id()
 	_, _, err := client.VariableApi.PatchVariable(pcfg.AuthContext, key).Variable(airflow.Variable{
 		Key:   &key,
 		Value: &val,
@@ -77,7 +81,7 @@ func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to update variable `%s` from Airflow: %w", key, err)
 	}
-	d.SetId(key)
+
 	return resourceVariableRead(d, m)
 }
 
