@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/apache/airflow-client-go/airflow"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ProviderConfig struct {
@@ -14,66 +14,52 @@ type ProviderConfig struct {
 	AuthContext context.Context
 }
 
-func Provider() *schema.Provider {
+func AirflowProvider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"base_endpoint": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			// username and password are used for API basic auth
-			"username": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The username to use for API basic authentication",
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The password to use for API basic authentication",
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_BASE_ENDPOINT", nil),
 			},
 			"oauth2_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The username to use for API basic authentication",
+				Description: "The oauth to use for API authentication",
+				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_OAUTH2_TOKEN", nil),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"airflow_variable": resourceVariable(),
+			"airflow_variable":   resourceVariable(),
+			"airflow_connection": resourceConnection(),
 		},
-		ConfigureFunc: func(p *schema.ResourceData) (interface{}, error) {
-			endpoint := p.Get("base_endpoint").(string)
-			u, err := url.Parse(endpoint)
-			if err != nil {
-				return nil, fmt.Errorf("invalid base_endpoint: %w", err)
-			}
-
-			// basePath := path.Join(u.Path + "/api/experimental")
-			// log.Printf("[DEBUG] Using API prefix: %s", basePath)
-
-			authCtx := context.Background()
-
-			// if username, ok := p.GetOk("username"); ok {
-			// 	var password interface{}
-			// 	if password, ok = p.GetOk("password"); !ok {
-			// 		return nil, fmt.Errorf("Found username for basic auth, but password not specified.")
-			// 	}
-			// 	log.Printf("[DEBUG] Using API Basic Auth")
-
-			// cred := airflow.ContextOAuth2.BasicAuth{
-			// 	UserName: username.(string),
-			// 	Password: password.(string),
-			// }
-			authCtx = context.WithValue(authCtx, airflow.ContextOAuth2, p.Get("oauth2_token").(string))
-			// }
-
-			return ProviderConfig{
-				ApiClient: airflow.NewAPIClient(&airflow.Configuration{
-					Scheme: u.Scheme,
-					Host:   u.Host,
-				}),
-				AuthContext: authCtx,
-			}, nil
-		},
+		ConfigureFunc: providerConfigure,
 	}
+}
+
+func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	endpoint := d.Get("base_endpoint").(string)
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base_endpoint: %w", err)
+	}
+
+	authCtx := context.Background()
+
+	authCtx = context.WithValue(authCtx, airflow.ContextAccessToken, d.Get("oauth2_token"))
+
+	return ProviderConfig{
+		ApiClient: airflow.NewAPIClient(&airflow.Configuration{
+			Scheme: u.Scheme,
+			Host:   u.Host,
+			Debug:  true,
+			Servers: airflow.ServerConfigurations{
+				{
+					URL:         "/api/v1",
+					Description: "Apache Airflow Stable API.",
+				},
+			},
+		}),
+		AuthContext: authCtx,
+	}, nil
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/airflow-client-go/airflow"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
@@ -19,7 +19,7 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 		Value: &val,
 	}).Execute()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create variable `%s` from Airflow: %w", key, err)
 	}
 	d.SetId(key)
 	return resourceVariableRead(d, m)
@@ -53,7 +53,7 @@ func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 		Value: &val,
 	}).Execute()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update variable `%s` from Airflow: %w", key, err)
 	}
 	d.SetId(key)
 	return resourceVariableRead(d, m)
@@ -64,7 +64,11 @@ func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
 	_, err := client.VariableApi.DeleteVariable(pcfg.AuthContext, key).Execute()
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete variable `%s` from Airflow: %w", key, err)
+	}
+
+	return nil
 }
 
 func resourceVariable() *schema.Resource {
