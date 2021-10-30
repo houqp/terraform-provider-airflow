@@ -33,6 +33,7 @@ func resourceVariable() *schema.Resource {
 func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
+
 	key := d.Get("key").(string)
 	val := d.Get("value").(string)
 	varApi := client.VariableApi

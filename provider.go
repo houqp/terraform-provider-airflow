@@ -30,8 +30,9 @@ func AirflowProvider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"airflow_variable":   resourceVariable(),
 			"airflow_connection": resourceConnection(),
+			"airflow_variable":   resourceVariable(),
+			"airflow_pool":       resourcePool(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
