@@ -45,12 +45,8 @@ func resourceConnection() *schema.Resource {
 				ValidateFunc: validation.IsPortNumberOrZero,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == ""
-				},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"extra": {
 				Type:     schema.TypeString,
@@ -72,33 +68,25 @@ func resourceConnectionCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if v, ok := d.GetOk("host"); ok {
-		val := v.(string)
-		conn.Host = *airflow.NewNullableString(&val)
+		conn.SetHost(v.(string))
 	}
 
 	if v, ok := d.GetOk("login"); ok {
-		val := v.(string)
-		conn.Login = *airflow.NewNullableString(&val)
+		conn.SetLogin(v.(string))
 	}
 
 	if v, ok := d.GetOk("schema"); ok {
-		val := v.(string)
-		conn.Schema = *airflow.NewNullableString(&val)
+		conn.SetSchema(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
-		val := int32(v.(int))
-		conn.Port = *airflow.NewNullableInt32(&val)
+		conn.SetPort(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("password"); ok {
-		val := v.(string)
-		conn.Password = &val
-	}
+	conn.SetPassword(d.Get("password").(string))
 
 	if v, ok := d.GetOk("extra"); ok {
-		val := v.(string)
-		conn.Extra = *airflow.NewNullableString(&val)
+		conn.SetExtra(v.(string))
 	}
 
 	connApi := client.ConnectionApi
@@ -124,14 +112,19 @@ func resourceConnectionRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to get connection `%s` from Airflow: %w", d.Id(), err)
 	}
 
-	d.Set("connection_id", connection.ConnectionId)
-	d.Set("conn_type", connection.ConnType)
-	d.Set("host", connection.Host.Get())
-	d.Set("login", connection.Login.Get())
-	d.Set("schema", connection.Schema.Get())
-	d.Set("port", connection.Port.Get())
-	d.Set("password", connection.Password)
-	d.Set("extra", connection.Extra.Get())
+	d.Set("connection_id", connection.GetConnectionId())
+	d.Set("conn_type", connection.GetConnType())
+	d.Set("host", connection.GetHost())
+	d.Set("login", connection.GetLogin())
+	d.Set("schema", connection.GetSchema())
+	d.Set("port", connection.GetPort())
+	d.Set("extra", connection.GetExtra())
+
+	if v, ok := connection.GetPasswordOk(); ok {
+		d.Set("password", v)
+	} else if v, ok := d.GetOk("password"); ok {
+		d.Set("password", v)
+	}
 
 	return nil
 }
@@ -148,33 +141,27 @@ func resourceConnectionUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if v, ok := d.GetOk("host"); ok {
-		val := v.(string)
-		conn.Host = *airflow.NewNullableString(&val)
+		conn.SetHost(v.(string))
 	}
 
 	if v, ok := d.GetOk("login"); ok {
-		val := v.(string)
-		conn.Login = *airflow.NewNullableString(&val)
+		conn.SetLogin(v.(string))
 	}
 
 	if v, ok := d.GetOk("schema"); ok {
-		val := v.(string)
-		conn.Schema = *airflow.NewNullableString(&val)
+		conn.SetSchema(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
-		val := int32(v.(int))
-		conn.Port = *airflow.NewNullableInt32(&val)
+		conn.SetPort(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("password"); ok {
-		val := v.(string)
-		conn.Password = &val
+	if v, ok := d.GetOk("password"); ok && v.(string) != "" {
+		conn.SetPassword(v.(string))
 	}
 
 	if v, ok := d.GetOk("extra"); ok {
-		val := v.(string)
-		conn.Extra = *airflow.NewNullableString(&val)
+		conn.SetExtra(v.(string))
 	}
 
 	_, _, err := client.ConnectionApi.PatchConnection(pcfg.AuthContext, connId).Connection(conn).Execute()
