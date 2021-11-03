@@ -45,12 +45,8 @@ func resourceConnection() *schema.Resource {
 				ValidateFunc: validation.IsPortNumberOrZero,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == ""
-				},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"extra": {
 				Type:     schema.TypeString,
@@ -122,8 +118,13 @@ func resourceConnectionRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("login", connection.GetLogin())
 	d.Set("schema", connection.GetSchema())
 	d.Set("port", connection.GetPort())
-	d.Set("password", connection.GetPassword())
 	d.Set("extra", connection.GetExtra())
+
+	if v, ok := connection.GetPasswordOk(); ok {
+		d.Set("password", v)
+	} else if v, ok := d.GetOk("password"); ok {
+		d.Set("password", v)
+	}
 
 	return nil
 }

@@ -73,7 +73,7 @@ func TestAccAirflowConnection_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "extra", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "password", rName),
+					resource.TestCheckResourceAttr(resourceName, "password", rNameUpdated),
 				),
 			},
 		},
