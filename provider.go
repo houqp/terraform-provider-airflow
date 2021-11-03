@@ -35,6 +35,9 @@ func AirflowProvider() *schema.Provider {
 			"airflow_pool":       resourcePool(),
 			"airflow_role":       resourceRole(),
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"airflow_connection": dataSourceConnection(),
+		},
 		ConfigureFunc: providerConfigure,
 	}
 }
