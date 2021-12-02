@@ -11,14 +11,22 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, _, err := client.VariableApi.PostVariables(pcfg.AuthContext, airflow.Variable{
-		Key:   key,
-		Value: d.Get("value").(string),
-	})
+	value := d.Get("value").(string)
+
+	v := airflow.Variable{
+		Key:   &key,
+		Value: &value,
+	}
+
+	req := client.VariableApi.PostVariables(pcfg.AuthContext)
+	req.Variable(v)
+	_, _, err := req.Execute()
 	if err != nil {
 		return err
 	}
+
 	d.SetId(key)
+
 	return resourceVariableRead(d, m)
 }
 
@@ -26,7 +34,9 @@ func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	variable, resp, err := client.VariableApi.GetVariable(pcfg.AuthContext, key)
+
+	req := client.VariableApi.GetVariable(pcfg.AuthContext, key)
+	variable, resp, err := req.Execute()
 	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
 		return nil
@@ -44,13 +54,20 @@ func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, _, err := client.VariableApi.PatchVariable(pcfg.AuthContext, key, airflow.Variable{
-		Key:   key,
-		Value: d.Get("value").(string),
-	}, nil)
+	value := d.Get("value").(string)
+
+	v := airflow.Variable{
+		Key:   &key,
+		Value: &value,
+	}
+
+	req := client.VariableApi.PatchVariable(pcfg.AuthContext, key)
+	req.Variable(v)
+	_, _, err := req.Execute()
 	if err != nil {
 		return err
 	}
+
 	d.SetId(key)
 	return resourceVariableRead(d, m)
 }
@@ -59,7 +76,8 @@ func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 	key := d.Get("key").(string)
-	_, err := client.VariableApi.DeleteVariable(pcfg.AuthContext, key)
+	req := client.VariableApi.DeleteVariable(pcfg.AuthContext, key)
+	_, err := req.Execute()
 	return err
 }
 

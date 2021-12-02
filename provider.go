@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"path"
 
 	"github.com/apache/airflow-client-go/airflow"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -45,15 +44,12 @@ func Provider() *schema.Provider {
 				return nil, fmt.Errorf("invalid base_endpoint: %w", err)
 			}
 
-			basePath := path.Join(u.Path + "/api/v1")
-			log.Printf("[DEBUG] Using API prefix: %s", basePath)
-
 			authCtx := context.Background()
 
 			if username, ok := p.GetOk("username"); ok {
 				var password interface{}
 				if password, ok = p.GetOk("password"); !ok {
-					return nil, fmt.Errorf("Found username for basic auth, but password not specified.")
+					return nil, fmt.Errorf("found username for basic auth, but password not specified.")
 				}
 				log.Printf("[DEBUG] Using API Basic Auth")
 
@@ -66,9 +62,8 @@ func Provider() *schema.Provider {
 
 			return ProviderConfig{
 				ApiClient: airflow.NewAPIClient(&airflow.Configuration{
-					Scheme:   u.Scheme,
-					Host:     u.Host,
-					BasePath: basePath,
+					Scheme: u.Scheme,
+					Host:   u.Host,
 				}),
 				AuthContext: authCtx,
 			}, nil
