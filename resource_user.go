@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/airflow-client-go/airflow"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
@@ -27,8 +27,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	req := client.UserApi.PostUser(pcfg.AuthContext)
-	req.User(u)
-	_, _, err := req.Execute()
+	_, _, err := req.User(u).Execute()
 	if err != nil {
 		return err
 	}
@@ -44,7 +43,6 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	username := d.Get("username").(string)
 
 	req := client.UserApi.GetUser(pcfg.AuthContext, username)
-
 	user, resp, err := req.Execute()
 	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
@@ -84,8 +82,7 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	req := client.UserApi.PatchUser(pcfg.AuthContext, username)
-	req.User(u)
-	_, _, err := req.Execute()
+	_, _, err := req.User(u).Execute()
 	if err != nil {
 		return err
 	}
@@ -104,12 +101,22 @@ func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
+func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceUserRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceUserCreate,
 		Read:   resourceUserRead,
 		Update: resourceUserUpdate,
 		Delete: resourceUserDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceUserImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:     schema.TypeString,

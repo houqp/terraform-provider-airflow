@@ -2,3 +2,4 @@ terraform-provider-airflow
 terraform.tfstate
 terraform.tfstate.*
 .terraform
+vendor

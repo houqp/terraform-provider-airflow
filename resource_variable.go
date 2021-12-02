@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/airflow-client-go/airflow"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
@@ -19,8 +19,7 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	req := client.VariableApi.PostVariables(pcfg.AuthContext)
-	req.Variable(v)
-	_, _, err := req.Execute()
+	_, _, err := req.Variable(v).Execute()
 	if err != nil {
 		return err
 	}
@@ -62,8 +61,7 @@ func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	req := client.VariableApi.PatchVariable(pcfg.AuthContext, key)
-	req.Variable(v)
-	_, _, err := req.Execute()
+	_, _, err := req.Variable(v).Execute()
 	if err != nil {
 		return err
 	}
@@ -81,13 +79,22 @@ func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
 	return err
 }
 
+func resourceVariableImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceVariableRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
 func resourceVariable() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVariableCreate,
 		Read:   resourceVariableRead,
 		Update: resourceVariableUpdate,
 		Delete: resourceVariableDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: resourceVariableImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"key": {
 				Type:     schema.TypeString,
