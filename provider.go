@@ -36,6 +36,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"airflow_variable": resourceVariable(),
+			"airflow_user":     resourceUser(),
 		},
 		ConfigureFunc: func(p *schema.ResourceData) (interface{}, error) {
 			endpoint := p.Get("base_endpoint").(string)
@@ -49,7 +50,7 @@ func Provider() *schema.Provider {
 			if username, ok := p.GetOk("username"); ok {
 				var password interface{}
 				if password, ok = p.GetOk("password"); !ok {
-					return nil, fmt.Errorf("found username for basic auth, but password not specified.")
+					return nil, fmt.Errorf("found username for basic auth, but password not specified")
 				}
 				log.Printf("[DEBUG] Using API Basic Auth")
 
