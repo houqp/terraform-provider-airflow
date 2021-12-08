@@ -40,7 +40,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	username := d.Get("username").(string)
+	username := d.Id()
 
 	req := client.UserApi.GetUser(pcfg.AuthContext, username)
 	user, resp, err := req.Execute()

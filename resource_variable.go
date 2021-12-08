@@ -32,7 +32,7 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	key := d.Get("key").(string)
+	key := d.Id()
 
 	req := client.VariableApi.GetVariable(pcfg.AuthContext, key)
 	variable, resp, err := req.Execute()
