@@ -40,7 +40,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	username := d.Get("username").(string)
+	username := d.Id()
 
 	req := client.UserApi.GetUser(pcfg.AuthContext, username)
 	user, resp, err := req.Execute()
@@ -65,7 +65,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	username := d.Get("username").(string)
+	username := d.Id()
 	email := d.Get("email").(string)
 	firstName := d.Get("first_name").(string)
 	lastName := d.Get("last_name").(string)
@@ -95,7 +95,7 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	username := d.Get("username").(string)
+	username := d.Id()
 	req := client.UserApi.DeleteUser(pcfg.AuthContext, username)
 	_, err := req.Execute()
 	return err

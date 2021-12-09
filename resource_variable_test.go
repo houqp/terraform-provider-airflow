@@ -32,6 +32,11 @@ func TestAcc_Variable(t *testing.T) {
 					resource.TestCheckResourceAttr("airflow_variable.test", "key", key),
 				),
 			},
+			{
+				ResourceName:      "airflow_variable.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

@@ -32,7 +32,7 @@ func resourceVariableCreate(d *schema.ResourceData, m interface{}) error {
 func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	key := d.Get("key").(string)
+	key := d.Id()
 
 	req := client.VariableApi.GetVariable(pcfg.AuthContext, key)
 	variable, resp, err := req.Execute()
@@ -52,7 +52,7 @@ func resourceVariableRead(d *schema.ResourceData, m interface{}) error {
 func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	key := d.Get("key").(string)
+	key := d.Id()
 	value := d.Get("value").(string)
 
 	v := airflow.Variable{
@@ -73,7 +73,7 @@ func resourceVariableUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceVariableDelete(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
-	key := d.Get("key").(string)
+	key := d.Id()
 	req := client.VariableApi.DeleteVariable(pcfg.AuthContext, key)
 	_, err := req.Execute()
 	return err

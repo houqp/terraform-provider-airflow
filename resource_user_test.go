@@ -37,6 +37,11 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("airflow_user.test", "username", username),
 				),
 			},
+			{
+				ResourceName:      "airflow_user.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
