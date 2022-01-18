@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/apache/airflow-client-go/airflow"
@@ -28,6 +29,18 @@ func AirflowProvider() *schema.Provider {
 				Description: "The oauth to use for API authentication",
 				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_OAUTH2_TOKEN", nil),
 			},
+			"username": {
+				Type:        schema.TypeString,
+				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_API_USERNAME", nil),
+				Optional:    true,
+				Description: "The username to use for API basic authentication",
+			},
+			"password": {
+				Type:        schema.TypeString,
+				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_API_PASSWORD", nil),
+				Optional:    true,
+				Description: "The password to use for API basic authentication",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"airflow_connection": resourceConnection(),
@@ -47,8 +60,23 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	authCtx := context.Background()
+	if v, ok := d.GetOk("oauth2_token"); ok {
+		authCtx = context.WithValue(authCtx, airflow.ContextAccessToken, v)
+	}
 
-	authCtx = context.WithValue(authCtx, airflow.ContextAccessToken, d.Get("oauth2_token"))
+	if username, ok := d.GetOk("username"); ok {
+		var password interface{}
+		if password, ok = d.GetOk("password"); !ok {
+			return nil, fmt.Errorf("found username for basic auth, but password not specified")
+		}
+		log.Printf("[DEBUG] Using API Basic Auth")
+
+		cred := airflow.BasicAuth{
+			UserName: username.(string),
+			Password: password.(string),
+		}
+		authCtx = context.WithValue(authCtx, airflow.ContextBasicAuth, cred)
+	}
 
 	return ProviderConfig{
 		ApiClient: airflow.NewAPIClient(&airflow.Configuration{
