@@ -11,7 +11,6 @@ import (
 
 func TestAccAirflowRole_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "airflow_role.test"
 	resource.Test(t, resource.TestCase{
@@ -20,23 +19,20 @@ func TestAccAirflowRole_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAirflowRoleCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAirflowRoleConfigBasic(rName, rName),
+				Config: testAccAirflowRoleConfigBasic(rName, "can_read", "Audit Logs"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.*", map[string]string{
+						"action":   "can_read",
+						"resource": "Audit Logs",
+					}),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAirflowRoleConfigBasic(rName, rNameUpdated),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
-				),
 			},
 		},
 	})
@@ -65,15 +61,15 @@ func testAccCheckAirflowRoleCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAirflowRoleConfigBasic(rName, action string) string {
+func testAccAirflowRoleConfigBasic(rName, action, resource string) string {
 	return fmt.Sprintf(`
 resource "airflow_role" "test" {
   name   = %[1]q
 
   action {
     action   = %[2]q
-	resource = %[2]q
+	resource = %[3]q
   } 
 }
-`, rName, action)
+`, rName, action, resource)
 }

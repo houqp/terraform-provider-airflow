@@ -48,18 +48,18 @@ func resourceRoleCreate(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
 	varApi := client.RoleApi
-	pool := airflow.Role{
+	role := airflow.Role{
 		Name: &name,
 	}
 
 	if v, ok := d.GetOk("action"); ok && v.(*schema.Set).Len() > 0 {
 		actions := expandAirflowRoleActions(d.Get("action").(*schema.Set).List())
-		pool.Actions = &actions
+		role.Actions = &actions
 	}
 
-	_, _, err := varApi.PostRole(pcfg.AuthContext).Role(pool).Execute()
+	_, _, err := varApi.PostRole(pcfg.AuthContext).Role(role).Execute()
 	if err != nil {
-		return fmt.Errorf("failed to create pool `%s` from Airflow: %w", name, err)
+		return fmt.Errorf("failed to create role `%s` from Airflow: %w", name, err)
 	}
 	d.SetId(name)
 
@@ -70,17 +70,17 @@ func resourceRoleRead(d *schema.ResourceData, m interface{}) error {
 	pcfg := m.(ProviderConfig)
 	client := pcfg.ApiClient
 
-	pool, resp, err := client.RoleApi.GetRole(pcfg.AuthContext, d.Id()).Execute()
+	role, resp, err := client.RoleApi.GetRole(pcfg.AuthContext, d.Id()).Execute()
 	if resp != nil && resp.StatusCode == 404 {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("failed to get pool `%s` from Airflow: %w", d.Id(), err)
+		return fmt.Errorf("failed to get role `%s` from Airflow: %w", d.Id(), err)
 	}
 
-	d.Set("name", pool.Name)
-	if err := d.Set("action", flattenAirflowRoleActions(*pool.Actions)); err != nil {
+	d.Set("name", role.Name)
+	if err := d.Set("action", flattenAirflowRoleActions(*role.Actions)); err != nil {
 		return fmt.Errorf("error setting action: %w", err)
 	}
 
@@ -93,14 +93,14 @@ func resourceRoleUpdate(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Id()
 	actions := expandAirflowRoleActions(d.Get("action").(*schema.Set).List())
-	pool := airflow.Role{
+	role := airflow.Role{
 		Name:    &name,
 		Actions: &actions,
 	}
 
-	_, _, err := client.RoleApi.PatchRole(pcfg.AuthContext, name).Role(pool).Execute()
+	_, _, err := client.RoleApi.PatchRole(pcfg.AuthContext, name).Role(role).Execute()
 	if err != nil {
-		return fmt.Errorf("failed to update pool `%s` from Airflow: %w", name, err)
+		return fmt.Errorf("failed to update role `%s` from Airflow: %w", name, err)
 	}
 
 	return resourceRoleRead(d, m)
@@ -112,7 +112,7 @@ func resourceRoleDelete(d *schema.ResourceData, m interface{}) error {
 
 	resp, err := client.RoleApi.DeleteRole(pcfg.AuthContext, d.Id()).Execute()
 	if err != nil {
-		return fmt.Errorf("failed to delete pool `%s` from Airflow: %w", d.Id(), err)
+		return fmt.Errorf("failed to delete role `%s` from Airflow: %w", d.Id(), err)
 	}
 
 	if resp != nil && resp.StatusCode == 404 {

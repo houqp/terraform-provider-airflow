@@ -28,9 +28,14 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("AIRFLOW_OAUTH2_TOKEN"); v == "" {
-		t.Fatal("AIRFLOW_OAUTH2_TOKEN must be set for acceptance tests")
+	_, tokenOk := os.LookupEnv("AIRFLOW_OAUTH2_TOKEN")
+	_, userOk := os.LookupEnv("AIRFLOW_API_USERNAME")
+	_, passOk := os.LookupEnv("AIRFLOW_API_PASSWORD")
+
+	if tokenOk && !(userOk || passOk) {
+		t.Fatal("AIRFLOW_OAUTH2_TOKEN OR AIRFLOW_API_USERNAME/AIRFLOW_API_PASSWORD must be set for acceptance tests")
 	}
+
 	if v := os.Getenv("AIRFLOW_BASE_ENDPOINT"); v == "" {
 		t.Fatal("AIRFLOW_BASE_ENDPOINT must be set for acceptance tests")
 	}
