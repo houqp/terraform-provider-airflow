@@ -8,6 +8,7 @@ import (
 
 	"github.com/apache/airflow-client-go/airflow"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type ProviderConfig struct {
@@ -19,27 +20,33 @@ func AirflowProvider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"base_endpoint": {
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_BASE_ENDPOINT", nil),
+				Type:         schema.TypeString,
+				Required:     true,
+				DefaultFunc:  schema.EnvDefaultFunc("AIRFLOW_BASE_ENDPOINT", nil),
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"oauth2_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The oauth to use for API authentication",
-				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_OAUTH2_TOKEN", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Description:   "The oauth to use for API authentication",
+				DefaultFunc:   schema.EnvDefaultFunc("AIRFLOW_OAUTH2_TOKEN", nil),
+				ConflictsWith: []string{"username", "password"},
 			},
 			"username": {
-				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_API_USERNAME", nil),
-				Optional:    true,
-				Description: "The username to use for API basic authentication",
+				Type:          schema.TypeString,
+				DefaultFunc:   schema.EnvDefaultFunc("AIRFLOW_API_USERNAME", nil),
+				Optional:      true,
+				Description:   "The username to use for API basic authentication",
+				RequiredWith:  []string{"password"},
+				ConflictsWith: []string{"oauth2_token"},
 			},
 			"password": {
-				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("AIRFLOW_API_PASSWORD", nil),
-				Optional:    true,
-				Description: "The password to use for API basic authentication",
+				Type:          schema.TypeString,
+				DefaultFunc:   schema.EnvDefaultFunc("AIRFLOW_API_PASSWORD", nil),
+				Optional:      true,
+				Description:   "The password to use for API basic authentication",
+				RequiredWith:  []string{"username"},
+				ConflictsWith: []string{"oauth2_token"},
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -78,18 +85,20 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		authCtx = context.WithValue(authCtx, airflow.ContextBasicAuth, cred)
 	}
 
-	return ProviderConfig{
-		ApiClient: airflow.NewAPIClient(&airflow.Configuration{
-			Scheme: u.Scheme,
-			Host:   u.Host,
-			Debug:  true,
-			Servers: airflow.ServerConfigurations{
-				{
-					URL:         "/api/v1",
-					Description: "Apache Airflow Stable API.",
-				},
+	clientConf := &airflow.Configuration{
+		Scheme: u.Scheme,
+		Host:   u.Host,
+		Debug:  true,
+		Servers: airflow.ServerConfigurations{
+			{
+				URL:         "/api/v1",
+				Description: "Apache Airflow Stable API.",
 			},
-		}),
+		},
+	}
+
+	return ProviderConfig{
+		ApiClient:   airflow.NewAPIClient(clientConf),
 		AuthContext: authCtx,
 	}, nil
 }
