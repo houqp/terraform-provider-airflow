@@ -54,6 +54,7 @@ func AirflowProvider() *schema.Provider {
 			"airflow_variable":   resourceVariable(),
 			"airflow_pool":       resourcePool(),
 			"airflow_role":       resourceRole(),
+			"airflow_user":       resourceUser(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
