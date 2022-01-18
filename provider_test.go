@@ -32,7 +32,7 @@ func testAccPreCheck(t *testing.T) {
 	_, userOk := os.LookupEnv("AIRFLOW_API_USERNAME")
 	_, passOk := os.LookupEnv("AIRFLOW_API_PASSWORD")
 
-	if tokenOk || userOk || passOk {
+	if tokenOk && !(userOk || passOk) {
 		t.Fatal("AIRFLOW_OAUTH2_TOKEN OR AIRFLOW_API_USERNAME/AIRFLOW_API_PASSWORD must be set for acceptance tests")
 	}
 
