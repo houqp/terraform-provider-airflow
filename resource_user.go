@@ -104,12 +104,12 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to get user `%s` from Airflow: %w", d.Id(), err)
 	}
 
-	d.Set("active", user.Active.Get())
+	d.Set("active", user.GetActive())
 	d.Set("email", user.Email)
-	d.Set("failed_login_count", user.FailedLoginCount.Get())
+	d.Set("failed_login_count", user.GetFailedLoginCount())
 	d.Set("first_name", user.FirstName)
 	d.Set("last_name", user.LastName)
-	d.Set("login_count", user.LoginCount.Get())
+	d.Set("login_count", user.GetLastLogin())
 	d.Set("username", user.Username)
 	d.Set("password", d.Get("password").(string))
 	d.Set("roles", flattenAirflowUserRoles(*user.Roles))
