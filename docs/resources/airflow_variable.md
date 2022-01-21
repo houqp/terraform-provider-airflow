@@ -34,7 +34,7 @@ This resource exports the following attributes:
 
 ## Import
 
-Content can be imported using the variable key.
+Variables can be imported using the variable key.
 
 ```terraform
 terraform import airflow_variable.default example

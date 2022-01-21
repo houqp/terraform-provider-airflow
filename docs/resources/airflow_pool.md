@@ -38,7 +38,7 @@ This resource exports the following attributes:
 
 ## Import
 
-Content can be imported using the pool name.
+Pools can be imported using the pool name.
 
 ```terraform
 terraform import airflow_pool.default example
