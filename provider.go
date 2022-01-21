@@ -51,6 +51,7 @@ func AirflowProvider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"airflow_connection": resourceConnection(),
+			"airflow_dag_run":    resourceDagRun(),
 			"airflow_variable":   resourceVariable(),
 			"airflow_pool":       resourcePool(),
 			"airflow_role":       resourceRole(),
