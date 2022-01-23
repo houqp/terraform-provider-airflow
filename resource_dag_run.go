@@ -47,8 +47,6 @@ func resourceDagRunCreate(d *schema.ResourceData, m interface{}) error {
 	client := pcfg.ApiClient.DAGRunApi
 
 	dagId := d.Get("dag_id").(string)
-	// dagRunId := d.Get("dag_run_id").(string)
-
 	dagRun := *airflow.NewDAGRunWithDefaults()
 
 	if v, ok := d.GetOk("dag_run_id"); ok {
