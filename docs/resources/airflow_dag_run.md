@@ -28,7 +28,7 @@ resource "airflow_dag_run" "example" {
 The following arguments are supported:
 
 * `dag_id` - (Required) The DAG ID to run.
-* `dag_run_id` - (Required) The DAG Run ID.
+* `dag_run_id` - (Optional) The DAG Run ID. If a value is not passed, a random one will be generated based on execution date.
 * `conf` - (Optional) A map describing additional configuration parameters.
 
 ## Attributes Reference
