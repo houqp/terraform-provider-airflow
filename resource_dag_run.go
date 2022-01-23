@@ -24,8 +24,9 @@ func resourceDagRun() *schema.Resource {
 			},
 			"dag_run_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"conf": {
 				Type:     schema.TypeMap,
@@ -46,20 +47,23 @@ func resourceDagRunCreate(d *schema.ResourceData, m interface{}) error {
 	client := pcfg.ApiClient.DAGRunApi
 
 	dagId := d.Get("dag_id").(string)
-	dagRunId := d.Get("dag_run_id").(string)
+	// dagRunId := d.Get("dag_run_id").(string)
 
 	dagRun := *airflow.NewDAGRunWithDefaults()
-	dagRun.SetDagRunId(dagRunId)
+
+	if v, ok := d.GetOk("dag_run_id"); ok {
+		dagRun.SetDagRunId(v.(string))
+	}
 
 	if v, ok := d.GetOk("conf"); ok {
 		dagRun.SetConf(v.(map[string]interface{}))
 	}
 
-	_, _, err := client.PostDagRun(pcfg.AuthContext, dagId).DAGRun(dagRun).Execute()
+	res, _, err := client.PostDagRun(pcfg.AuthContext, dagId).DAGRun(dagRun).Execute()
 	if err != nil {
 		return fmt.Errorf("failed to create dagRunId `%s` from Airflow: %w", dagId, err)
 	}
-	d.SetId(fmt.Sprintf("%s:%s", dagId, dagRunId))
+	d.SetId(fmt.Sprintf("%s:%s", dagId, *res.DagRunId.Get()))
 
 	return resourceDagRunRead(d, m)
 }

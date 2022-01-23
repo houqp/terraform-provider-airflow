@@ -10,6 +10,33 @@ import (
 )
 
 func TestAccAirflowDagRun_basic(t *testing.T) {
+	dagId := "example_bash_operator"
+
+	resourceName := "airflow_dag_run.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAirflowDagRunCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAirflowDagRunConfigBasic(dagId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "dag_id", dagId),
+					resource.TestCheckResourceAttrSet(resourceName, "dag_run_id"),
+					resource.TestCheckResourceAttr(resourceName, "conf.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAirflowDagRun_dagRunId(t *testing.T) {
 	dagRunId := acctest.RandomWithPrefix("tf-acc-test")
 	dagId := "example_bash_operator"
 
@@ -20,7 +47,7 @@ func TestAccAirflowDagRun_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAirflowDagRunCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAirflowDagRunConfigBasic(dagId, dagRunId),
+				Config: testAccAirflowDagRunConfigRunId(dagId, dagRunId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "dag_id", dagId),
 					resource.TestCheckResourceAttr(resourceName, "dag_run_id", dagRunId),
@@ -38,7 +65,6 @@ func TestAccAirflowDagRun_basic(t *testing.T) {
 }
 
 func TestAccAirflowDagRun_conf(t *testing.T) {
-	dagRunId := acctest.RandomWithPrefix("tf-acc-test")
 	dagId := "example_bash_operator"
 
 	resourceName := "airflow_dag_run.test"
@@ -48,12 +74,12 @@ func TestAccAirflowDagRun_conf(t *testing.T) {
 		CheckDestroy: testAccCheckAirflowDagRunCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAirflowDagRunConfigConf(dagId, dagRunId),
+				Config: testAccAirflowDagRunConfigConf(dagId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "dag_id", dagId),
-					resource.TestCheckResourceAttr(resourceName, "dag_run_id", dagRunId),
+					resource.TestCheckResourceAttrSet(resourceName, "dag_run_id"),
 					resource.TestCheckResourceAttr(resourceName, "conf.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("conf.%s", dagRunId), dagRunId),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("conf.%s", dagId), dagId),
 				),
 			},
 			{
@@ -93,7 +119,15 @@ func testAccCheckAirflowDagRunCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAirflowDagRunConfigBasic(dagId, dagRunId string) string {
+func testAccAirflowDagRunConfigBasic(dagId string) string {
+	return fmt.Sprintf(`
+resource "airflow_dag_run" "test" {
+  dag_id     = %[1]q
+}
+`, dagId)
+}
+
+func testAccAirflowDagRunConfigRunId(dagId, dagRunId string) string {
 	return fmt.Sprintf(`
 resource "airflow_dag_run" "test" {
   dag_id     = %[1]q
@@ -102,15 +136,14 @@ resource "airflow_dag_run" "test" {
 `, dagId, dagRunId)
 }
 
-func testAccAirflowDagRunConfigConf(dagId, dagRunId string) string {
+func testAccAirflowDagRunConfigConf(dagId string) string {
 	return fmt.Sprintf(`
 resource "airflow_dag_run" "test" {
   dag_id     = %[1]q
-  dag_run_id = %[2]q
 
   conf = {
     %[1]q = %[1]q
   }  
 }
-`, dagId, dagRunId)
+`, dagId)
 }
