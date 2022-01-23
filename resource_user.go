@@ -39,7 +39,7 @@ func resourceUser() *schema.Resource {
 				Required: true,
 			},
 			"login_count": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"roles": {

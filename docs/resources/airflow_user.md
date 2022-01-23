@@ -41,11 +41,11 @@ This resource exports the following attributes:
 * `active` - Whether the user is active.
 * `id` - The username.
 * `failed_login_count` - The number of times the login failed.
-* `login_count` -The login count.
+* `login_count` - The login count.
 
 ## Import
 
-Content can be imported using the user key.
+Users can be imported using the user key.
 
 ```terraform
 terraform import airflow_user.example example

@@ -43,7 +43,7 @@ This resource exports the following attributes:
 
 ## Import
 
-Content can be imported using the role key.
+Roles can be imported using the role key.
 
 ```terraform
 terraform import airflow_role.default example

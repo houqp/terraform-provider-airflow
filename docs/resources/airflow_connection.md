@@ -40,7 +40,7 @@ This resource exports the following attributes:
 
 ## Import
 
-Content can be imported using the connection key.
+Connections can be imported using the connection key.
 
 ```terraform
 terraform import airflow_connection.default example
