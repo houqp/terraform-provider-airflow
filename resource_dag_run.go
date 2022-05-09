@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/apache/airflow-client-go/airflow"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -15,6 +18,9 @@ func resourceDagRun() *schema.Resource {
 		Delete: resourceDagRunDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"dag_id": {
@@ -59,9 +65,21 @@ func resourceDagRunCreate(d *schema.ResourceData, m interface{}) error {
 
 	res, _, err := client.PostDagRun(pcfg.AuthContext, dagId).DAGRun(dagRun).Execute()
 	if err != nil {
-		return fmt.Errorf("failed to create dagRunId `%s` from Airflow: %w", dagId, err)
+		return fmt.Errorf("failed to create Dag Run `%s` from Airflow: %w", dagId, err)
 	}
 	d.SetId(fmt.Sprintf("%s:%s", dagId, *res.DagRunId.Get()))
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"queued", "running", "success"},
+		Target:  []string{"success"},
+		Refresh: resourceDagRunStateRefreshFunc(d.Id(), pcfg.AuthContext, client),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	_, err = stateConf.WaitForStateContext(pcfg.AuthContext)
+	if err != nil {
+		return fmt.Errorf("error waiting for Dag Run %q to finish: %s", d.Id(), err)
+	}
 
 	return resourceDagRunRead(d, m)
 }
@@ -121,4 +139,20 @@ func airflowDagRunId(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func resourceDagRunStateRefreshFunc(id string, pcfg context.Context, client *airflow.DAGRunApiService) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		dagId, dagRunId, err := airflowDagRunId(id)
+		if err != nil {
+			return nil, "", err
+		}
+
+		dagRun, _, err := client.GetDagRun(pcfg, dagId, dagRunId).Execute()
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to get Dag Run `%s` from Airflow: %w", dagRunId, err)
+		}
+
+		return dagRun, string(dagRun.GetState()), nil
+	}
 }
