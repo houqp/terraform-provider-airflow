@@ -45,8 +45,8 @@ github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXva
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/apache/airflow-client-go/airflow v0.0.0-20220123203524-94cc2cbeaefe h1:UcHH7VtRxYuPASkr6RTm0x0i8pJe9N+ihNimLCI0Yak=
-github.com/apache/airflow-client-go/airflow v0.0.0-20220123203524-94cc2cbeaefe/go.mod h1:x2yDpHvQTpMyFzvwqnroMtzVgG9qFp/eJWA6kw5KTMM=
+github.com/apache/airflow-client-go/airflow v0.0.0-20220509204651-4f1b26e4a5d0 h1:/fOxIKhBcDI8a8xb+KrqYwWRNyB4C/dKD9G0uxxQTFY=
+github.com/apache/airflow-client-go/airflow v0.0.0-20220509204651-4f1b26e4a5d0/go.mod h1:x2yDpHvQTpMyFzvwqnroMtzVgG9qFp/eJWA6kw5KTMM=
 github.com/apparentlymart/go-cidr v1.1.0 h1:2mAhrMoF+nhXqxTzSZMUzDHkLjmIHC+Zzn4tdgBZjnU=
 github.com/apparentlymart/go-cidr v1.1.0/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
 github.com/apparentlymart/go-dump v0.0.0-20180507223929-23540a00eaa3/go.mod h1:oL81AME2rN47vu18xqj1S1jPIPuN7afo62yKTNn3XMM=
